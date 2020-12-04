@@ -1,8 +1,8 @@
 const express = require('express');
 
 const router = express.Router();
-const usersRouter = require('./users');
-const postsRouter = require('./posts');
+const usersRouter = require('./user');
+const postsRouter = require('./post');
 
 
 router.use('/users', usersRouter);
@@ -10,7 +10,7 @@ router.use('/posts', postsRouter);
 
 
 router.get('/', function(req, res, next) {
-  res.send('api');
+  res.send('colorfull api');
 });
 
 
