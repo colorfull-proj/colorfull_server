@@ -5,6 +5,16 @@ const table = 'COMMENT_TB';
 
 
 module.exports = {
+    checkComment: async (cid) => {
+        try {
+            const result = await pool.queryParam(`SELECT * FROM ${table} WHERE cid="${cid}"`);
+            if (result.length === 0) return false;
+            return true;
+        } catch (err) {
+            console.log('check comment ERROR', err);
+            throw err;
+        }
+    },
     getComment: async (cid) => {
         try {
             const comment = await pool.queryParam(`SELECT * FROM ${table} WHERE cid="${cid}"`);
