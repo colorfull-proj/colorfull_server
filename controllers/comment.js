@@ -7,17 +7,29 @@ const Comment = require('../models/comment');
 module.exports = {
     getComment: async (req, res) => {
         try {
-            const comment = await Comment.getComment(req.params.id);
+            const comment = await Comment.getComment(req.params.cid);
             if (comment === -1) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_COMMENT));
-            return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_COMMENT_SUCCESS, { comment }));
+            const user = await User.getUser(comment.uid);
+            return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_COMMENT_SUCCESS, {
+                comment: {
+                    ...comment,
+                    user
+                }
+            }));
         } catch (err) {
             return res.status(statusCode.INTERNAL_SERVER_ERROR).send(util.fail(statusCode.INTERNAL_SERVER_ERROR, responseMessage.DB_ERROR));
         }
     },
     getCommentsByPid: async (req, res) => {
         try {
-            const comments = await Comment.getCommentsByPid(req.params.id);
-            return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_COMMENTS_SUCCESS, { comments }));
+            const comments = await Comment.getCommentsByPid(req.params.pid);
+            const users = await User.getUsers();
+            return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_COMMENTS_SUCCESS, {
+                comments: comments.map(comment => ({
+                    ...comment,
+                    user: users.filter(user => user.uid === comment.uid)
+                }))
+            }));
         } catch (err) {
             return res.status(statusCode.INTERNAL_SERVER_ERROR).send(util.fail(statusCode.INTERNAL_SERVER_ERROR, responseMessage.DB_ERROR));
         }
@@ -25,9 +37,9 @@ module.exports = {
     uploadComment: async (req, res) => {
         const { pid } = req.params;
         const { uid, content, pictureURL } = req.body;
-        if (!pid || !uid) return res.status(statusCode.BAD_REQUEST).send(util.fail(statusCode.BAD_REQUEST, responseMessage.NULL_VALUE));        
+        if (!pid || !uid) return res.status(statusCode.BAD_REQUEST).send(util.fail(statusCode.BAD_REQUEST, responseMessage.NULL_VALUE));
         try {
-            if (!await Post.checkPost(pid)) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_POST));
+            if (!await Post.checkPost(pid)) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_COMMENT));
             const cid = await Comment.uploadComment(pid, uid, content, pictureURL);
             return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.UPLOAD_COMMENTS_SUCCESS, { cid }));
         } catch (err) {

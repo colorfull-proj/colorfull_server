@@ -11,7 +11,7 @@ module.exports = {
             return true;
         } catch (err) {
             console.log('check post ERROR', err);
-            throw e;
+            throw err;
         }
     },
     getPosts: async () => {
@@ -29,7 +29,7 @@ module.exports = {
             return result[0];
         } catch (err) {
             console.log('get post ERROR', err);
-            throw e;
+            throw err;
         }
     },
     uploadPost: async (uid, title, content) => {
