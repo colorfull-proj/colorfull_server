@@ -2,6 +2,7 @@ const { util, statusCode, responseMessage } = require('../modules');
 const _ = require('lodash');
 const Post = require('../models/post');
 const User = require('../models/user');
+const Empathy = require('../models/postEmpathy');
 
 module.exports = {
     getPosts: async (req, res) => {
