@@ -36,7 +36,8 @@ module.exports = {
     },
     uploadComment: async (req, res) => {
         const { pid } = req.params;
-        const { uid, content, pictureURL } = req.body;
+        const { uid, content } = req.body;
+        const pictureURL = req.file ? req.file.location : null;
         if (!pid || !uid) return res.status(statusCode.BAD_REQUEST).send(util.fail(statusCode.BAD_REQUEST, responseMessage.NULL_VALUE));
         try {
             if (!await Post.checkPost(pid)) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_COMMENT));
@@ -48,13 +49,13 @@ module.exports = {
     },
     updateComment: async (req, res) => {
         const { pid, cid } = req.params;
-        const { uid, content, pictureURL } = req.body;
+        const { uid, content } = req.body;
         if (!cid || !pid || !uid) return res.status(statusCode.BAD_REQUEST).send(util.fail(statusCode.BAD_REQUEST, responseMessage.NULL_VALUE));
         try {
             const comment = await Comment.getComment(cid);
             if (comment === -1) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_COMMENT));
             if (comment.uid !== uid) return res.status(statusCode.UNAUTHORIZED).send(util.fail(statusCode.UNAUTHORIZED, responseMessage.UNAUTHORIZED_COMMENT));
-            await Comment.updateComment(cid, content, pictureURL);
+            await Comment.updateComment(cid, content, req.file ? req.file.location : comment.pictureURL);
             return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.UPDATE_COMMENT_SUCCESS, { cid }));
         } catch (err) {
             return res.status(statusCode.INTERNAL_SERVER_ERROR).send(util.fail(statusCode.INTERNAL_SERVER_ERROR, responseMessage.DB_ERROR));
