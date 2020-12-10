@@ -3,6 +3,8 @@ const _ = require('lodash');
 const Post = require('../models/post');
 const User = require('../models/user');
 const Empathy = require('../models/postEmpathy');
+const Comment = require('../models/comment');
+const ReComment = require('../models/reComment');
 
 module.exports = {
     getPosts: async (req, res) => {
@@ -10,6 +12,8 @@ module.exports = {
             const posts = await Post.getPosts();
             const users = await User.getUsers();
             const empathys = await Empathy.getPostEmpathys();
+            const comments = _.flatten(await Promise.all(posts.map(post => Comment.getCommentsByPid(post.pid))));
+            const reComments = _.flatten(await Promise.all(comments.map(comment => ReComment.getReCommentsByCid(comment.cid))));
             return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_POSTS_SUCCESS, {
                 posts: posts.map(post => ({
                     ...post,
@@ -17,7 +21,11 @@ module.exports = {
                     empathys: _(empathys).filter(empathy => empathy.pid === post.pid).map(empathy => ({
                         ...empathy,
                         user: users.filter(u => u.uid === empathy.uid)[0]
-                    })).value()
+                    })).value(),
+                    comments: comments.map(comment => ({
+                        ...comment,
+                        reComments: reComments.filter(reComment => reComment.cid === comment.cid)
+                    }))
                 }))
             }));
         } catch (err) {
@@ -30,6 +38,8 @@ module.exports = {
             if (post === -1) return res.status(statusCode.CONFLICT).send(util.fail(statusCode.CONFLICT, responseMessage.NO_POST));
             const users = await User.getUsers();
             const empathys = await Empathy.getPostEmpathysByPid(req.params.pid);
+            const comments = await Comment.getCommentsByPid(req.params.pid);
+            const reComments = _.flatten(await Promise.all(comments.map(comment => ReComment.getReCommentsByCid(comment.cid))));
 
             return res.status(statusCode.OK).send(util.success(statusCode.OK, responseMessage.GET_POST_SUCCESS, {
                 post: {
@@ -38,6 +48,10 @@ module.exports = {
                     empathys: empathys.map(empathy => ({
                         ...empathy,
                         user: users.filter(u => u.uid === empathy.uid)[0]
+                    })),
+                    comments: comments.map(comment => ({
+                        ...comment,
+                        reComments: reComments.filter(reComment => reComment.cid === comment.cid)
                     }))
                 }
             }));
